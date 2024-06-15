@@ -1,9 +1,16 @@
 import React, { useState } from "react";
+import { createClient } from '@supabase/supabase-js'
+
+// Create a single supabase client for interacting with your database
+const supabase_project_url = 'https://exttgrmtjbijllepzsxv.supabase.co'
+const supabase_api_key =  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4dHRncm10amJpamxsZXB6c3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTg0MzY4MDMsImV4cCI6MjAzNDAxMjgwM30.-m-nif2yJmggOVd-HgPT2AJJJIo5-etkbVW3j57KfFk'
+const supabase = createClient(supabase_project_url, supabase_api_key);
+
 
 function UploadForm() {
   const [formData, setFormData] = useState({
     fullName: "",
-    id: "",
+    studentId: "",
     department: "",
     nickname: "",
     lastWord: "",
@@ -23,11 +30,39 @@ function UploadForm() {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission, e.g., send data to server
-    console.log(formData);
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const { data: studentData, error: studentError } = await supabase
+      .from('students')
+      .insert([
+        {
+          fullName: formData.fullName,
+          studentId: formData.studentId, // Using studentId as the primary key
+          department: formData.department,
+          nickname: formData.nickname,
+          lastWord: formData.lastWord,
+          describeYourself: formData.describeYourself,
+          futureSelf: formData.futureSelf,
+          friendsSay: formData.friendsSay,
+          instagramHandle: formData.instagramHandle,
+          headshotUrl: `headshots/${formData.studentId}-${formData.headshot.name}`,
+          fullBodyUrl: `full-bodies/${formData.studentId}-${formData.fullBody.name}`,
+        },
+      ]);
+            
+    if (studentError) {
+      throw studentError;
+    }
+
+    console.log('Student data inserted successfully:', studentData);
+    console.log('Form data:', formData);
+  } catch (error) {
+    console.error('Error uploading the form', error.message);
+  }
+};
+
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -49,8 +84,8 @@ function UploadForm() {
           <label className="block text-sm font-medium text-gray-700">ID</label>
           <input
             type="text"
-            name="id"
-            value={formData.id}
+            name="studentId"
+            value={formData.studentId}
             onChange={handleChange}
             className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
           />
