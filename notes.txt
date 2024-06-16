@@ -1,0 +1,23 @@
+  To Do's
+
+  Admin
+     event create page
+       event name
+       upload  pictures
+     upload page 
+       full name 
+       id Ugr/19867/12
+       department
+       nikname
+       lastWord
+       desribe your self in one word
+       in ten years I will be
+       what do your frenids say about your
+       instagram handle
+       two Photo one Head shoot Photo , one full body one
+       add frends tag
+
+
+
+  user
+

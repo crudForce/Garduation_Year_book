@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import supabase from "./supabaseClient"; // Adjust the path as needed
 
 function UploadForm() {
   const [formData, setFormData] = useState({
@@ -23,16 +24,72 @@ function UploadForm() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission, e.g., send data to server
-    console.log(formData);
+
+    try {
+      // Upload headshot
+      let headshoturl = null;
+      if (formData.headshot) {
+        const { data, error } = await supabase.storage
+          .from("students")
+          .upload(
+            `headshots/${formData.id}_${formData.headshot.name}`,
+            formData.headshot
+          );
+
+        if (error) throw error;
+        headshoturl = data.path;
+      }
+
+      // Upload full body photo
+      let fullbodyurl = null;
+      if (formData.fullBody) {
+        const { data, error } = await supabase.storage
+          .from("students")
+          .upload(
+            `fullbody/${formData.id}_${formData.fullBody.name}`,
+            formData.fullBody
+          );
+
+        if (error) throw error;
+        fullbodyurl = data.path;
+      }
+
+      // Prepare data for insertion
+      const studentData = {
+        id: formData.id,
+        fullname: formData.fullName,
+        department: formData.department,
+        nickname: formData.nickname,
+        lastword: formData.lastWord,
+        describeyourself: formData.describeYourself,
+        futureself: formData.futureSelf,
+        friendssay: formData.friendsSay,
+        instagramhandle: formData.instagramHandle,
+        headshoturl,
+        fullbodyurl,
+      };
+
+      // Log data to be inserted
+      console.log("Student Data:", studentData);
+
+      // Insert student data into the database
+      const { error } = await supabase.from("students").insert([studentData]);
+
+      if (error) throw error;
+      alert("Student data uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading data: ", error);
+      alert("There was an error uploading the data.");
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Upload Student Data</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Form Fields */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Full Name
