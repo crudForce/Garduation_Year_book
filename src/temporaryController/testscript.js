@@ -1,5 +1,5 @@
 // testscript.cjs
-const { GetData } = require('./GoogleDataFetcher.cjs');
+import {GetData} from './GoogleDataFetcher';
 
 async function test() {
   const data = await GetData();
