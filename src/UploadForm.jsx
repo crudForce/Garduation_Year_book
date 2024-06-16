@@ -17,8 +17,8 @@ function UploadForm() {
     futureSelf: "",
     friendsSay: "",
     instagramHandle: "",
-    headshot: "", // Store URL for headshot
-    fullBody: "", // Store URL for full body
+    headshot: "", // Store file ID for headshot
+    fullBody: "", // Store file ID for full body
   });
 
   const [data, setData] = useState([]);
@@ -80,7 +80,12 @@ function UploadForm() {
       console.error('Error uploading the form', error.message);
     }
   };
-            console.log(formData);
+
+  // Function to generate proxied Google Drive thumbnail link
+  const getProxiedImageLink = (fileId) => {
+    const googleDriveThumbnailLink = `https://drive.google.com/thumbnail?id=${fileId}`;
+    return `http://localhost:3000/proxy?url=${encodeURIComponent(googleDriveThumbnailLink)}`;
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -193,21 +198,21 @@ function UploadForm() {
           />
         </div>
         <div>
-        <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700">
             Headshot Photo
           </label>
           <img
-            src={formData.headshot}
+            src={getProxiedImageLink(formData.headshot)}
             alt="Headshot"
             className="mt-1 block w-full rounded-md"
           />
         </div>
         <div>
-        <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700">
             Full Body Photo
           </label>
           <img
-            src={formData.fullBody}
+            src={getProxiedImageLink(formData.fullBody)}
             alt="Full Body"
             className="mt-1 block w-full rounded-md"
           />
