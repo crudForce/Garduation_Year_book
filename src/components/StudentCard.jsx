@@ -19,14 +19,10 @@ function StudentCard() {
 
     // Test getPublicUrl with a known path
 
-    const testGetPublicUrl = () => {
-      const testUrl = supabase.storage
-        .from("students")
-        .getPublicUrl("headshots/1901_1.png").publicURL;
-      console.log("Test Public URL:", testUrl);
-    };
-
-    testGetPublicUrl();
+    const data = supabase.storage
+      .from("students")
+      .getPublicUrl("headshots/1901_1.png").data.publicUrl;
+    console.log("Test Public URL:", data);
   }, []);
 
   console.log(students);
@@ -59,14 +55,20 @@ function StudentCard() {
               Instagram: {student.instagramhandle}
             </p>
             {student.headshoturl && (
-              <img src="https://pixobpdscpbakwlbeoxu.supabase.co/storage/v1/object/public/students/fullbody/1900_Opera%20Snapshot_2024-06-09_104317_localhost.png" />
+              <img
+                src={
+                  supabase.storage
+                    .from("students")
+                    .getPublicUrl(student.headshoturl).data.publicUrl
+                }
+              />
             )}
             {student.fullbodyurl && (
               <img
                 src={
                   supabase.storage
                     .from("students")
-                    .getPublicUrl(student.fullbodyurl).publicURL
+                    .getPublicUrl(student.fullbodyurl).data.publicUrl
                 }
                 alt="Full Body"
                 className="w-full h-48 object-cover mt-2 rounded-md"
