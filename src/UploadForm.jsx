@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import { GetData } from './temporaryController/GoogleDataFetcher'; // Importing default export
-
-const supabase_project_url = 'https://exttgrmtjbijllepzsxv.supabase.co';
-const supabase_api_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4dHRncm10amJpamxsZXB6c3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTg0MzY4MDMsImV4cCI6MjAzNDAxMjgwM30.-m-nif2yJmggOVd-HgPT2AJJJIo5-etkbVW3j57KfFk';
-const supabase = createClient(supabase_project_url, supabase_api_key);
 
 function UploadForm() {
   const [formData, setFormData] = useState({
