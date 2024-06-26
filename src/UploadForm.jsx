@@ -1,10 +1,15 @@
-import React, { useState } from "react";
-import supabase from "./supabaseClient"; // Adjust the path as needed
+import React, { useState, useEffect } from "react";
+import { createClient } from '@supabase/supabase-js';
+import { GetData } from './temporaryController/GoogleDataFetcher'; // Importing default export
+
+const supabase_project_url = 'https://exttgrmtjbijllepzsxv.supabase.co';
+const supabase_api_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4dHRncm10amJpamxsZXB6c3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTg0MzY4MDMsImV4cCI6MjAzNDAxMjgwM30.-m-nif2yJmggOVd-HgPT2AJJJIo5-etkbVW3j57KfFk';
+const supabase = createClient(supabase_project_url, supabase_api_key);
 
 function UploadForm() {
   const [formData, setFormData] = useState({
     fullName: "",
-    id: "",
+    studentId: "",
     department: "",
     nickname: "",
     lastWord: "",
@@ -12,84 +17,80 @@ function UploadForm() {
     futureSelf: "",
     friendsSay: "",
     instagramHandle: "",
-    headshot: null,
-    fullBody: null,
+    headshot: "", // Store file ID for headshot
+    fullBody: "", // Store file ID for full body
   });
 
+  const [data, setData] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const fetchedData = await GetData();
+        setData(fetchedData);
+        if (fetchedData.length > 0) {
+          setFormData(fetchedData[0]); // Initialize form with the first object
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const handleNext = () => {
+    setCurrentIndex(prevIndex => Math.min(prevIndex + 1, data.length - 1));
+    setFormData(data[currentIndex + 1]);
+  };
+
+  const handlePrevious = () => {
+    setCurrentIndex(prevIndex => Math.max(prevIndex - 1, 0));
+    setFormData(data[currentIndex - 1]);
+  };
+
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: files ? files[0] : value,
+      [name]: value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      // Upload headshot
-      let headshoturl = null;
-      if (formData.headshot) {
-        const { data, error } = await supabase.storage
-          .from("students")
-          .upload(
-            `headshots/${formData.id}_${formData.headshot.name}`,
-            formData.headshot
-          );
-
-        if (error) throw error;
-        headshoturl = data.path;
-      }
-
-      // Upload full body photo
-      let fullbodyurl = null;
-      if (formData.fullBody) {
-        const { data, error } = await supabase.storage
-          .from("students")
-          .upload(
-            `fullbody/${formData.id}_${formData.fullBody.name}`,
-            formData.fullBody
-          );
-
-        if (error) throw error;
-        fullbodyurl = data.path;
-      }
-
-      // Prepare data for insertion
-      const studentData = {
-        id: formData.id,
-        fullname: formData.fullName,
-        department: formData.department,
-        nickname: formData.nickname,
-        lastword: formData.lastWord,
-        describeyourself: formData.describeYourself,
-        futureself: formData.futureSelf,
-        friendssay: formData.friendsSay,
-        instagramhandle: formData.instagramHandle,
-        headshoturl,
-        fullbodyurl,
+      const formDataWithFileUrls = {
+        ...formData,
+        headshotUrl: `headshots/${formData.studentId}-${formData.headshot}`,
+        fullBodyUrl: `full-bodies/${formData.studentId}-${formData.fullBody}`,
       };
 
-      // Log data to be inserted
-      console.log("Student Data:", studentData);
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .insert([formDataWithFileUrls]);
 
-      // Insert student data into the database
-      const { error } = await supabase.from("students").insert([studentData]);
+      if (studentError) {
+        throw studentError;
+      }
 
-      if (error) throw error;
-      alert("Student data uploaded successfully!");
+      console.log('Student data inserted successfully:', studentData);
+      console.log('Form data:', formDataWithFileUrls);
     } catch (error) {
-      console.error("Error uploading data: ", error);
-      alert("There was an error uploading the data.");
+      console.error('Error uploading the form', error.message);
     }
+  };
+
+  // Function to generate proxied Google Drive thumbnail link
+  const getProxiedImageLink = (fileId) => {
+    const googleDriveThumbnailLink = `https://drive.google.com/thumbnail?id=${fileId}`;
+    return `http://localhost:3000/proxy?url=${encodeURIComponent(googleDriveThumbnailLink)}`;
   };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Upload Student Data</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Form Fields */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Full Name
@@ -106,8 +107,8 @@ function UploadForm() {
           <label className="block text-sm font-medium text-gray-700">ID</label>
           <input
             type="text"
-            name="id"
-            value={formData.id}
+            name="studentId"
+            value={formData.studentId}
             onChange={handleChange}
             className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
           />
@@ -200,22 +201,20 @@ function UploadForm() {
           <label className="block text-sm font-medium text-gray-700">
             Headshot Photo
           </label>
-          <input
-            type="file"
-            name="headshot"
-            onChange={handleChange}
-            className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+          <img
+            src={getProxiedImageLink(formData.headshot)}
+            alt="Headshot"
+            className="mt-1 block w-full rounded-md"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Full Body Photo
           </label>
-          <input
-            type="file"
-            name="fullBody"
-            onChange={handleChange}
-            className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+          <img
+            src={getProxiedImageLink(formData.fullBody)}
+            alt="Full Body"
+            className="mt-1 block w-full rounded-md"
           />
         </div>
         <div>
@@ -226,9 +225,28 @@ function UploadForm() {
             Submit
           </button>
         </div>
+        <div className="flex justify-between">
+          <button
+            type="button"
+            onClick={handlePrevious}
+            disabled={currentIndex === 0}
+            className="py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={currentIndex === data.length - 1}
+            className="py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700"
+          >
+            Next
+          </button>
+        </div>
       </form>
     </div>
   );
 }
 
 export default UploadForm;
+
