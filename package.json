@@ -10,7 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< eyob/UploadForm
     "@supabase/supabase-js": "^2.43.4",
+=======
+    "@supabase/auth-helpers-react": "^0.5.0",
+    "@supabase/supabase-js": "^2.43.5",
+>>>>>>> master
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
