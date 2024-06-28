@@ -7,7 +7,7 @@ function App() {
     <div>
       <div>
         {/* <UploadForm /> */}
-        <Students />
+        <UploadForm />
       </div>
     </div>
   );
